@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biochemistry & Clinical Pathology Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Checkbox & Radio Styles */
+        .check-indicator {
+            transition: all 0.2s ease-in-out;
+        }
+        input[type="radio"]:checked + .check-indicator {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            box-shadow: inset 0 0 0 4px white;
+        }
+
+        /* Feedback Animations */
+        .option-correct {
+            background-color: #dcfce7 !important;
+            border-color: #22c55e !important;
+            animation: pulse-green 0.4s ease-out;
+            color: #166534;
+            font-weight: bold;
+        }
+        .option-incorrect {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            animation: shake 0.4s ease-in-out;
+            color: #991b1b;
+            text-decoration: line-through;
+        }
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+        
+        .disabled-labels { pointer-events: none; opacity: 0.9; }
+        .result-box { display: none; }
+        .chapter-header {
+            background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 py-10 px-4">
+    <div class="max-w-5xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden border border-gray-200">
+        <!-- Header -->
+        <div class="bg-blue-800 p-8 text-white text-center">
+            <h1 class="text-3xl md:text-4xl font-bold mb-3">Biochemistry & Clinical Pathology</h1>
+            <p class="text-lg text-blue-100">Comprehensive Quiz - 100 Questions</p>
+        </div>
+
+        <div class="p-6 md:p-10">
+            <div id="quiz-container" class="space-y-8">
+                <!-- Quiz Content Will Be Generated Here -->
+            </div>
+
+            <!-- Grading Section -->
+            <div id="result" class="result-box mt-12 p-8 bg-green-50 rounded-2xl border-4 border-green-200 text-center shadow-inner">
+                <h3 class="text-3xl font-bold text-green-800 mb-2">Your Final Score</h3>
+                <div class="text-5xl font-extrabold text-green-600 mb-4"><span id="score">0</span> / <span id="total-qs">0</span></div>
+                <p class="text-green-700 text-lg">Review the highlighted answers above.</p>
+                <button onclick="location.reload()" class="mt-6 bg-white text-green-700 border-2 border-green-600 hover:bg-green-600 hover:text-white font-bold py-3 px-8 rounded-full transition">
+                    Retry Quiz
+                </button>
+            </div>
+
+            <div class="mt-12 flex justify-center" id="submit-btn-container">
+                <button onclick="gradeQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-4 px-14 rounded-full shadow-lg transition transform hover:-translate-y-1 active:scale-95">
+                    Submit & View Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Full Question Bank - 100 Questions
+        const mcqs = [
+            // Lipid Metabolism & Lipoproteins
+            { c: "Lipid Metabolism & Lipoproteins", q: "1. Which Apo protein is an essential activator of Lipoprotein Lipase (LPL)?", t: 1, a: [2], o: ["Apo A-I", "Apo B-100", "Apo C-II", "Apo E"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "2. The rate-limiting enzyme in cholesterol biosynthesis is:", t: 1, a: [1], o: ["Thiolase", "HMG-CoA reductase", "Acetyl-CoA carboxylase", "LCAT"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "3. Which lipoprotein is primarily responsible for the transport of dietary triglycerides from the intestine to tissues?", t: 1, a: [3], o: ["HDL", "VLDL", "LDL", "Chylomicrons"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "4. The process of reversing cholesterol transport, taking excess cholesterol from peripheral tissues back to the liver, is primarily handled by:", t: 1, a: [2], o: ["LDL", "VLDL", "HDL", "Chylomicrons"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "5. Which of the following is considered \"bad cholesterol,\" as its elevation is strongly associated with atherosclerosis?", t: 1, a: [1], o: ["HDL", "LDL", "VLDL", "Chylomicrons"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "6. Fatty acid oxidation (beta-oxidation) occurs primarily in which cellular location?", t: 1, a: [2], o: ["Cytosol", "Nucleus", "Mitochondria", "Endoplasmic Reticulum"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "7. Which enzyme is responsible for the activation of fatty acids before they can enter the mitochondria for oxidation?", t: 1, a: [0], o: ["Thiokinase (Acyl CoA synthetase)", "Lipoprotein lipase", "Hormone-sensitive lipase", "Thiolase"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "8. Which of the following inhibits Acetyl CoA carboxylase, thereby inhibiting fatty acid synthesis?", t: 1, a: [2], o: ["Citrate", "Insulin", "Palmitoyl CoA", "NADPH"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "9. A deficiency in which enzyme leads to Type I Hyperlipoproteinemia (Familial Chylomicronemia Syndrome)?", t: 1, a: [1], o: ["LDL receptor", "Lipoprotein lipase", "LCAT", "HMG-CoA reductase"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "10. Which lipoprotein has the highest content of protein?", t: 1, a: [0], o: ["HDL", "LDL", "VLDL", "Chylomicron"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "11. The conversion of free cholesterol into cholesterol esters in HDL is facilitated by:", t: 1, a: [1], o: ["CETP", "LCAT", "ACAT", "LPL"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "12. Which of the following is not a ketone body?", t: 1, a: [3], o: ["Acetone", "Acetoacetate", "β-hydroxybutyrate", "Acetyl CoA"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "13. Which condition would likely lead to an increase in fatty acid oxidation and ketone body production?", t: 1, a: [2], o: ["Well-fed state", "High carbohydrate intake", "Uncontrolled diabetes mellitus", "High insulin levels"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "14. What is the fate of LDL particles after they deliver cholesterol to peripheral tissues?", t: 1, a: [1], o: ["Converted to HDL", "Taken up by the liver via LDL receptors", "Converted to VLDL", "Oxidized by LCAT"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "15. Which apoprotein is exclusively found in chylomicrons and their remnants, acting as a structural component?", t: 1, a: [3], o: ["Apo C2", "Apo A1", "Apo B100", "Apo B48"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "16. Which of the following lipids are glycolipids, except:", t: 1, a: [2], o: ["Sphingomyelins", "Gangliosides", "Cephaline", "Cerebrosides"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "17. Which of the following the best marker for the diagnosis of acute pancreatitis?", t: 1, a: [3], o: ["Gama-glutamyl trans peptidase", "Lactase", "Transaminase", "Amylase"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "18. A gall stone that blocked the upper part of bile duct would cause an:", t: 1, a: [3], o: ["Increased formation of chylomicrons", "Increased recycling of bile salts", "Increased excretion of bile salts", "Decreased excretion of fats in the feces"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "19. Which of the following apo protein is an activator of LCAT?", t: 1, a: [1], o: ["Apo C2", "Apo A1", "Apo B100", "Apo B48"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "20. In Abetalipoproteinemia, lipoproteins containing apoB are not formed and lipids droplets accumulate in the intestine and liver. Which of the following lipoproteins does not contain ApoB protein?", t: 1, a: [0], o: ["HDL", "LDL", "VLDL", "Chylomicrons"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "21. According to the Friedewald formula, which of the following is used to estimate LDL cholesterol?", t: 1, a: [0], o: ["Total Cholesterol - HDL - (Triglycerides / 5)", "Total Cholesterol + HDL - (Triglycerides / 5)", "Total Cholesterol - HDL - (Triglycerides / 2)", "Total Cholesterol + HDL - (Triglycerides / 2)"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "22. Which lipoprotein is characterized by a high concentration of apolipoprotein B-100 (ApoB-100)?", t: 1, a: [2], o: ["HDL", "Chylomicrons", "LDL", "HDL2"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "23. A milky appearance in a fasting serum sample is typically due to an increase in which lipoprotein?", t: 1, a: [3], o: ["VLDL", "LDL", "HDL", "Chylomicrons"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "24. Which enzyme is responsible for the hydrolysis of triglycerides in chylomicrons and VLDL?", t: 1, a: [1], o: ["Hormone-sensitive lipase", "Lipoprotein lipase", "Lecithin-cholesterol acyltransferase (LCAT)", "Hepatic lipase"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "25. Which apolipoprotein is the primary protein component of high-density lipoprotein (HDL)?", t: 1, a: [2], o: ["Apo B-100", "Apo B-48", "Apo A-I", "Apo E"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "26. What is the major lipid component of very-low-density lipoproteins (VLDL)?", t: 1, a: [1], o: ["Cholesterol esters", "Triglycerides", "Phospholipids", "Free fatty acids"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "27. Which of the following is considered an \"independent\" risk factor for atherosclerosis, representing a mutated form of LDL?", t: 1, a: [0], o: ["Lp(a)", "HDL3", "VLDL", "Chylomicron remnant"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "28. A patient with a familial deficiency of LDL receptors will likely present with which condition?", t: 1, a: [2], o: ["Elevated HDL", "Reduced VLDL", "Extremely high LDL", "Low triglycerides"] },
+            { c: "Lipid Metabolism & Lipoproteins", q: "29. What is the principal role of VLDL?", t: 1, a: [1], o: ["Transporting cholesterol to tissues", "Transporting endogenous triglycerides from the liver", "Collecting cholesterol from cells", "Transporting dietary fat"] },
+
+            // Nitrogen Metabolism & Renal Markers
+            { c: "Nitrogen Metabolism & Renal Markers", q: "30. Which amino acid is primarily responsible for transporting ammonia from peripheral tissues to the liver for detoxification?", t: 1, a: [1], o: ["Alanine", "Glutamine", "Arginine", "Aspartate"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "31. Which enzyme in the urea cycle requires ATP and acts as a rate-limiting step?", t: 1, a: [2], o: ["Arginase", "Ornithine Transcarbamoylase (OTC)", "Carbamoyl Phosphate Synthetase I (CPS-I)", "Argininosuccinate lyase"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "32. In clinical biochemistry, a deficiency in which enzyme leads to the highest accumulation of orotate in urine?", t: 1, a: [2], o: ["Carbamoyl phosphate synthetase I", "Argininosuccinate synthetase", "Ornithine transcarbamoylase (OTC)", "Arginase"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "33. Which of the following is the central nitrogen acceptor in transamination reactions?", t: 1, a: [1], o: ["Pyruvate", "α-Ketoglutarate", "Oxaloacetate", "Acetoacetate"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "34. Which of the following is the first stable product of biological nitrogen fixation?", t: 1, a: [2], o: ["Nitrate", "Nitrite", "Ammonia", "Atmospheric Nitrogen"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "35. Which protein is responsible for protecting nitrogenase from oxygen damage in root nodules?", t: 1, a: [1], o: ["Hemoglobin", "Leghaemoglobin", "Nitrogenase", "Ferredoxin"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "36. Which of the following is the primary nitrogenous excretory product in humans?", t: 1, a: [1], o: ["Ammonia", "Urea", "Uric acid", "Creatinine"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "37. Which compound constitutes the highest percentage (approx. 45%) of total Non-Protein Nitrogen (NPN) in the blood?", t: 1, a: [2], o: ["Creatinine", "Uric Acid", "Urea", "Amino Acids"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "38. Where is urea synthesized in the human body?", t: 1, a: [1], o: ["Kidney", "Liver", "Muscle", "Spleen"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "39. Which NPN constituent is the most sensitive marker for measuring glomerular filtration rate (GFR)?", t: 1, a: [3], o: ["Urea", "Uric Acid", "Ammonia", "Creatinine"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "40. Increased serum uric acid levels, often causing inflammation in the big toe, are diagnostic of which condition?", t: 1, a: [1], o: ["Uremia", "Gout", "Renal failure", "Hepatitis"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "41. What is the major end product of purine nucleic acid metabolism?", t: 1, a: [2], o: ["Urea", "Creatine", "Uric Acid", "Ammonia"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "42. Which condition is characterized by an increase in nitrogenous wastes (urea) in the blood due to kidney failure?", t: 1, a: [1], o: ["Hyperuricemia", "Uremia", "Gout", "Hyperammonemia"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "43. Which of the following NPN compounds is a product of creatine and creatine phosphate breakdown in muscle?", t: 1, a: [2], o: ["Uric acid", "Ammonia", "Creatinine", "Urea"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "44. When determining Blood Urea Nitrogen (BUN), the enzymatic method uses which enzyme?", t: 1, a: [2], o: ["Uricase", "Creatinase", "Urease", "Amylase"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "45. Which statement regarding NPN is incorrect?", t: 1, a: [2], o: ["Urea is reabsorbed by the kidney tubules.", "Creatinine is secreted into the plasma at a constant rate.", "Uric acid is easily soluble in plasma.", "NPN accounts for 5–6.8% of total nitrogen."] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "46. Which of the following is a potential cause for falsely elevated creatinine results in the Jaffe reaction?", t: 1, a: [1], o: ["Bilirubin", "Cephalosporin", "Glucose", "Hemolysis"] },
+            { c: "Nitrogen Metabolism & Renal Markers", q: "47. Which parameter is used for the calculation of the estimated glomerular filtration rate (eGFR)?", t: 1, a: [2], o: ["Serum Urea", "Serum Uric Acid", "Serum Creatinine", "Serum Ammonia"] },
+
+            // Plasma Proteins
+            { c: "Plasma Proteins", q: "48. Which plasma protein is responsible for maintaining the highest percentage of colloid osmotic pressure?", t: 1, a: [2], o: ["Fibrinogen", "Alpha-1 globulin", "Albumin", "Gamma globulin"] },
+            { c: "Plasma Proteins", q: "49. Which of the following is considered a \"negative\" acute-phase protein?", t: 1, a: [1], o: ["C-reactive protein", "Albumin", "Haptoglobin", "Fibrinogen"] },
+            { c: "Plasma Proteins", q: "50. Which plasma protein is decreased in Wilson's disease?", t: 1, a: [2], o: ["Transferrin", "Haptoglobin", "Ceruloplasmin", "Alpha-1 antitrypsin"] },
+            { c: "Plasma Proteins", q: "51. Alpha-1 antitrypsin deficiency is primarily associated with which clinical condition?", t: 1, a: [2], o: ["Nephrotic syndrome", "Liver cirrhosis", "Pulmonary emphysema", "Iron deficiency anemia"] },
+            { c: "Plasma Proteins", q: "52. In serum protein electrophoresis (SPEP) at pH 8.6, which protein travels fastest towards the anode?", t: 1, a: [0], o: ["Albumin", "α-1 globulin", "β-globulin", "γ-globulin"] },
+            { c: "Plasma Proteins", q: "53. Which protein is responsible for binding free hemoglobin in the plasma to prevent its excretion?", t: 1, a: [1], o: ["Ceruloplasmin", "Haptoglobin", "Transferrin", "Albumin"] },
+            { c: "Plasma Proteins", q: "54. Which of the following plasma proteins is NOT synthesized in the liver?", t: 1, a: [2], o: ["Albumin", "Fibrinogen", "Gamma-globulins", "Prothrombin"] },
+            { c: "Plasma Proteins", q: "55. Which protein carries iron in the blood?", t: 1, a: [2], o: ["Ceruloplasmin", "Albumin", "Transferrin", "Haptoglobin"] },
+
+            // Clinical Enzymology
+            { c: "Clinical Enzymology", q: "56. Which of the following is considered a functional plasma enzyme?", t: 1, a: [1], o: ["Alanine aminotransferase (ALT)", "Lipoprotein lipase", "Lactate dehydrogenase (LDH)", "Alkaline phosphatase (ALP)"] },
+            { c: "Clinical Enzymology", q: "57. Which enzyme is most commonly used to detect biliary obstruction?", t: 1, a: [2], o: ["Creatine kinase (CK)", "Amylase", "γ-glutamyltransferase (GGT)", "Lactate dehydrogenase (LDH)"] },
+            { c: "Clinical Enzymology", q: "58. Which isoenzyme is specifically used for the diagnosis of acute myocardial infarction?", t: 1, a: [1], o: ["CK-MM", "CK-MB", "CK-BB", "LDH-5"] },
+            { c: "Clinical Enzymology", q: "59. A dramatic rise in serum amylase and lipase is highly indicative of which condition?", t: 1, a: [2], o: ["Liver cirrhosis", "Prostate cancer", "Acute pancreatitis", "Myocardial infarction"] },
+            { c: "Clinical Enzymology", q: "60. Which of the following is a key enzyme used to detect bone disorders such as Paget's disease?", t: 1, a: [1], o: ["Acid phosphatase", "Alkaline phosphatase (ALP)", "Aspartate aminotransferase (AST)", "Aldolase"] },
+            { c: "Clinical Enzymology", q: "61. The \"non-functional\" plasma enzymes are useful in clinical diagnosis because:", t: 1, a: [2], o: ["They regulate blood coagulation.", "They catalyze reactions in the blood plasma.", "They are released into the blood after cell damage.", "They help transport nutrients."] },
+            { c: "Clinical Enzymology", q: "62. Which LDH isoenzyme is highly elevated in liver damage?", t: 1, a: [3], o: ["LDH-1", "LDH-2", "LDH-3", "LDH-5"] },
+            { c: "Clinical Enzymology", q: "63. Which of the following enzymes is used as a marker for prostate cancer?", t: 1, a: [1], o: ["Alkaline phosphatase", "Acid phosphatase", "Creatine kinase", "ALT"] },
+            { c: "Clinical Enzymology", q: "64. Transaminases (ALT/AST) are primarily used to assess injury to which organ?", t: 1, a: [2], o: ["Heart", "Kidney", "Liver", "Pancreas"] },
+            { c: "Clinical Enzymology", q: "65. What is the main characteristic of an enzyme, such as prothrombin, that is present in the blood?", t: 1, a: [1], o: ["It is a non-functional enzyme.", "It is a functional enzyme.", "It is an isoenzyme.", "It is an intracellular enzyme."] },
+
+            // Renal Function & Pathophysiology
+            { c: "Renal Function & Pathophysiology", q: "66. What is the most accurate clinical indicator of glomerular filtration rate (GFR) to assess overall kidney function?", t: 1, a: [2], o: ["Serum Urea", "Serum Creatinine", "Estimated GFR (eGFR)", "Urine Specific Gravity"] },
+            { c: "Renal Function & Pathophysiology", q: "67. Which substance is primarily used to measure the urine albumin-creatinine ratio (uACR) for kidney damage?", t: 1, a: [1], o: ["Glucose", "Albumin", "Red blood cells", "Urea"] },
+            { c: "Renal Function & Pathophysiology", q: "68. Which of the following is NOT typically indicated by elevated Blood Urea Nitrogen (BUN)?", t: 1, a: [0], o: ["Liver failure", "Prerenal failure", "Intrinsic renal failure", "Post renal failure"] },
+            { c: "Renal Function & Pathophysiology", q: "69. The presence of elevated protein (specifically albumin) in the urine is known as:", t: 1, a: [2], o: ["Pyuria", "Hematuria", "Albuminuria", "Glycosuria"] },
+            { c: "Renal Function & Pathophysiology", q: "70. Which of the following is a common symptom of decreased kidney function?", t: 1, a: [2], o: ["Increased red blood cell production", "Lowered blood pressure", "Fluid retention (edema)", "Increased appetite"] },
+            { c: "Renal Function & Pathophysiology", q: "71. Which hormone is released by the kidney to stimulate red blood cell production?", t: 1, a: [2], o: ["Renin", "Aldosterone", "Erythropoietin", "ADH"] },
+            { c: "Renal Function & Pathophysiology", q: "72. Which structure in the kidney is responsible for filtering blood?", t: 1, a: [1], o: ["Medulla", "Nephron", "Ureter", "Bladder"] },
+            { c: "Renal Function & Pathophysiology", q: "73. Elevated BUN accompanied by a high BUN/creatinine ratio is typically associated with:", t: 1, a: [2], o: ["Post renal failure", "Intrinsic renal failure", "Prerenal azotemia", "Normal function"] },
+            { c: "Renal Function & Pathophysiology", q: "74. What is the normal function of the loop of Henle in the kidney?", t: 1, a: [2], o: ["Filtration", "Glucose absorption", "Concentration of urine", "Protein synthesis"] },
+            { c: "Renal Function & Pathophysiology", q: "75. Which of the following is NOT a cause of pre-renal failure?", t: 1, a: [3], o: ["Hypovolemia", "Congestive heart failure", "Renal artery obstruction", "Hypervolemia"] },
+
+            // Liver Function Tests
+            { c: "Liver Function Tests", q: "76. Which of the following is considered a \"true\" liver function test, as it directly assesses the liver's synthetic capacity?", t: 1, a: [3], o: ["Alanine aminotransferase (ALT)", "Alkaline phosphatase (ALP)", "Bilirubin", "International Normalized Ratio (INR)"] },
+            { c: "Liver Function Tests", q: "77. Which enzyme is considered more specific for hepatocellular injury compared to others?", t: 1, a: [1], o: ["Aspartate aminotransferase (AST)", "Alanine aminotransferase (ALT)", "Alkaline phosphatase (ALP)", "Gamma-glutamyl transferase (GGT)"] },
+            { c: "Liver Function Tests", q: "78. A patient with chronic alcohol use disorder shows a significant elevation in ALP and GGT compared to ALT/AST. This pattern usually suggests:", t: 1, a: [1], o: ["Acute viral hepatitis", "Cholestasis", "Acute hepatic necrosis", "Wilson's disease"] },
+            { c: "Liver Function Tests", q: "79. A 50-year-old male presents with advanced cirrhosis and ascites. Which of the following LFT results is most likely?", t: 1, a: [2], o: ["High albumin, low INR", "High albumin, low bilirubin", "Low albumin, high INR", "Normal albumin, low ALT"] },
+            { c: "Liver Function Tests", q: "80. Which liver enzyme is most commonly elevated in alcoholic liver disease and can also be induced by medications?", t: 1, a: [2], o: ["ALT", "AST", "GGT", "ALP"] },
+            { c: "Liver Function Tests", q: "81. Which of the following best describes the \"AST/ALT ratio\" in alcoholic hepatitis?", t: 1, a: [1], o: ["AST < ALT (Ratio < 1)", "AST > ALT (Ratio > 2:1)", "AST = ALT", "ALT is only elevated"] },
+            { c: "Liver Function Tests", q: "82. Which component of bilirubin is elevated due to obstructive jaundice?", t: 1, a: [2], o: ["Indirect bilirubin", "Total bilirubin only", "Conjugated (Direct) bilirubin", "Unconjugated bilirubin"] },
+
+            // Advanced Clinical Cases & Biomarkers
+            { c: "Advanced Clinical Cases & Biomarkers", q: "83. β2-microglobulin and α1-microglobulin are filtered at the glomeruli and are usually reabsorbed by:", t: 1, a: [1], o: ["Distal tubular", "Proximal tubular", "Collecting duct", "Loop tubular"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "84. Normally antitrypsin protects the lung tissue from proteases (active elastase) released from:", t: 1, a: [1], o: ["B cells", "Macrophages", "Kidneys", "Liver"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "85. The below are the tests based on liver's part in carbohydrate metabolism, except:", t: 1, a: [2], o: ["Galactose tolerance test", "Fructose tolerance test", "Ammonia Tolerance Test", "Epinephrine tolerance test"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "86. Amylase > 10 times the upper reference limit (URL) suggests:", t: 1, a: [0], o: ["Acute pancreatitis", "Chronic pancreatitis", "Chronic liver disease", "Mumps"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "87. Highly accumulation of chylomicrons in the plasma without elevation of VLDL indicates:", t: 1, a: [0], o: ["Absence or deficiency of lipoprotein lipase or deficit in apoC-II", "Increased lipoprotein lipase or deficit in apoC-II activities", "Increased lipoprotein lipase and amylase", "High concentration of apo B100"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "88. Massive accumulation of chylomicrons in the plasma without elevation of VLDL clinically lead to:", t: 1, a: [2], o: ["Nephritis", "Chronic pancreatitis", "Xanthomas", "Increase risk of coronary artery disease"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "89. Elevations of chylomicrons and VLDL, clinically lead to:", t: 1, a: [0], o: ["Acute pancreatitis", "Chronic pancreatitis", "Chronic liver disease", "Mumps"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "90. Elevations of chylomicrons and VLDL cause of:", t: 1, a: [0], o: ["Lipoprotein lipase deficiency", "HSTGL deficiency", "Absence of Apo A", "Apo CII deficiency"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "91. Large accumulation of unesterified cholesterol in plasma and body tissues cause of:", t: 1, a: [1], o: ["Apo AI deficiency", "LCAT deficiency", "Apo C-II deficiency", "Apo E deficiency"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "92. Which enzyme is responsible for esterifying cholesterol in HDL?", t: 1, a: [0], o: ["LCAT (Lecithin-cholesterol acyltransferase)", "ACAT (Acyl-CoA: cholesterol acyltransferase)", "Lipoprotein Lipase", "Hormone-sensitive lipase"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "93. Which disease is characterized by a failure to produce Apo lipoprotein B-containing lipoproteins (LDL, VLDL, Chylomicrons)?", t: 1, a: [1], o: ["Familial hypercholesterolemia", "Abetalipoproteinemia", "Tangier disease", "Niemann-Pick disease"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "94. High accumulation of unesterified cholesterol in plasma and body tissues, clinically lead to:", t: 1, a: [3], o: ["Renal insufficiency", "Premature atherosclerosis", "Hemolytic anemia", "All of these"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "95. A 15-year-old woman presented to the surgical unit with acute pancreatitis with Cholesterol 33.4 mmol/L, Triglyceride 69.1 mmol/L, HDL 0.9 mmol/L and Amylase < 20 U/L:", t: 1, a: [1], o: ["Familial Combined Hyperlipidemia (Type IIa, IIb and IV)", "Hypertriglyceridemia", "Familial hypercholesterolemia", "Hypercholesterolemia"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "96. Post-Renal Azotemia may cause:", t: 1, a: [3], o: ["Renal calculi", "Tumors of bladder or prostate", "Severe infections", "All of these"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "97. Uric acid is measured to:", t: 1, a: [3], o: ["Assess inherited disorders of purine metabolism", "Confirm diagnosis and monitor treatment of gout", "Assist in the diagnosis of renal calculi", "All of these"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "98. What is the metabolic consequence of a deficiency in Apo B-100?", t: 1, a: [2], o: ["Increased HDL production", "Reduced chylomicron formation", "Inability to produce VLDL / LDL", "Reduced bile production"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "99. Which LFT marker is most sensitive for detecting cholestasis (bile duct obstruction)?", t: 1, a: [2], o: ["ALT", "Albumin", "Alkaline phosphatase (ALP)", "Bilirubin"] },
+            { c: "Advanced Clinical Cases & Biomarkers", q: "100. Cause of bisalbuminaemias:", t: 1, a: [3], o: ["Inherited mutation of a gene Albumin", "β lactam: high-dose therapy in renal failure", "Pancreatic fistula, by lysis Albumin by pancreatic enzymes", "All of these"] }
+        ];
+
+        // Audio Context for feedback
+        let audioCtx = null;
+        function playTone(freq, type, duration) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+        const playCorrect = () => playTone(880, 'sine', 0.2);
+        const playWrong = () => playTone(220, 'square', 0.2);
+
+        let totalQuestions = 0;
+
+        function initMCQs() {
+            const container = document.getElementById('quiz-container');
+            let currentChapter = "";
+
+            mcqs.forEach((m, idx) => {
+                // Insert Chapter Header
+                if (m.c !== currentChapter) {
+                    currentChapter = m.c;
+                    const chapterHeader = document.createElement('div');
+                    chapterHeader.className = "chapter-header text-white px-6 py-4 rounded-xl shadow-md mt-10 mb-6";
+                    chapterHeader.innerHTML = `<h2 class="text-2xl font-bold">${currentChapter}</h2>`;
+                    container.appendChild(chapterHeader);
+                }
+
+                totalQuestions++;
+                
+                const qDiv = document.createElement('div');
+                qDiv.className = 'mcq-wrapper p-5 md:p-6 border border-gray-200 rounded-xl bg-white shadow-sm transition-all duration-300';
+                qDiv.id = `wrapper-q${idx}`;
+                
+                qDiv.innerHTML = `
+                    <p class="font-bold text-lg text-gray-800 mb-4 leading-relaxed">${m.q}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 options-grid" id="grid-q${idx}">
+                        ${m.o.map((opt, oIdx) => `
+                            <label class="flex items-start p-3 md:p-4 border border-gray-200 rounded-xl hover:bg-slate-50 cursor-pointer transition relative group overflow-hidden bg-white">
+                                <input type="radio" name="q${idx}" value="${oIdx}" class="mt-1 mr-3 w-5 h-5 text-blue-600 hidden" onchange="checkAnswer(${idx})">
+                                <div class="w-5 h-5 mt-0.5 mr-3 border-2 border-gray-300 rounded-full check-indicator flex-shrink-0"></div>
+                                <span class="text-gray-700 leading-snug">${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(qDiv);
+            });
+            
+            document.getElementById('total-qs').textContent = totalQuestions;
+        }
+
+        // Logic to check answer instantly when selected
+        function checkAnswer(qIdx) {
+            const m = mcqs[qIdx];
+            const grid = document.getElementById(`grid-q${qIdx}`);
+            const wrapper = document.getElementById(`wrapper-q${qIdx}`);
+            const labels = grid.querySelectorAll('label');
+            const checkedBoxes = grid.querySelectorAll(`input[name="q${qIdx}"]:checked`);
+            
+            if (checkedBoxes.length === 1) {
+                grid.classList.add('disabled-labels');
+                let isPerfect = true;
+                
+                // Evaluate selected boxes
+                checkedBoxes.forEach(cb => {
+                    const val = parseInt(cb.value);
+                    if (m.a.includes(val)) {
+                        labels[val].classList.add('option-correct');
+                    } else {
+                        labels[val].classList.add('option-incorrect');
+                        isPerfect = false;
+                    }
+                });
+                
+                // Reveal the correct answers that were missed
+                m.a.forEach(correctVal => {
+                    labels[correctVal].classList.add('option-correct');
+                });
+
+                if (isPerfect) {
+                    playCorrect();
+                    wrapper.classList.add('border-green-300', 'bg-green-50/30');
+                } else {
+                    playWrong();
+                    wrapper.classList.add('border-red-300', 'bg-red-50/30');
+                }
+            }
+        }
+
+        function gradeQuiz() {
+            let totalScore = 0;
+            
+            mcqs.forEach((m, idx) => {
+                const checkedBoxes = document.querySelectorAll(`input[name="q${idx}"]:checked`);
+                let isPerfect = false;
+
+                if (checkedBoxes.length === 1) {
+                    isPerfect = true;
+                    checkedBoxes.forEach(cb => {
+                        if (!m.a.includes(parseInt(cb.value))) {
+                            isPerfect = false;
+                        }
+                    });
+                }
+                
+                if (isPerfect) totalScore++;
+                
+                // Auto-evaluate any unanswered questions
+                if (checkedBoxes.length < 1) {
+                     // Provide visual feedback for unanswered questions
+                     const grid = document.getElementById(`grid-q${idx}`);
+                     grid.classList.add('disabled-labels');
+                     const labels = grid.querySelectorAll('label');
+                     m.a.forEach(correctVal => {
+                         labels[correctVal].classList.add('option-correct');
+                     });
+                     document.getElementById(`wrapper-q${idx}`).classList.add('border-red-300', 'bg-red-50/30');
+                }
+            });
+
+            document.getElementById('score').textContent = totalScore;
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('submit-btn-container').style.display = 'none';
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        window.onload = initMCQs;
+    </script>
+</body>
+</html>
